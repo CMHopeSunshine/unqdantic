@@ -26,7 +26,7 @@ UnqDantic 是一个基于 [UnQLite](https://github.com/symisc/unqlite) 和 [Pyda
 
 **不要再用 json 文件当数据库用啦，来试试 UnqDantic 吧！！**
 
-> 但是 UNQlite 不支持索引、唯一约束等特性，性能我不太熟悉，可能不适用于大型项目
+> 但是 UNQlite 不支持索引、唯一约束等特性，尚未知性能如何，可能不适用于大型项目
 
 ## 安装
 
@@ -78,6 +78,10 @@ user1.update(
 )
 # 也可以用关键字参数形式更新
 # user1.update(age=20)
+
+# 还可以手动修改后，调用save()来更新到数据库
+user1.info.level = 2
+user1.save()
 
 # 删除该文档
 user1.delete()
@@ -151,14 +155,13 @@ collection.delete(id=id)
 # 需要传入一个参数为文档，返回值为bool的函数
 datas: List[Dict[str, Any]] = collection.filter(lambda doc: doc["name"] == "a")
 
-
 # 除此之外，你还可以直接将数据库db当键值对数据库使用，就像python的dict一样
-# 但是同样的，值只支持基本数据类型，并且返回值是该值得bytes形式
+# 但是同样的，值只支持基本数据类型，并且返回值是该值的bytes形式
 
 # 存一个键值对
 db["key"] = "value"
 # 取出值
-value: Optional[bytes] = db["key"]
+value: Optional[bytes] = db["key"]  # b"value"
 # 删除值
 del db["key"]
 # 查看键值对是否存在
