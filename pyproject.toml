@@ -1,0 +1,80 @@
+[tool.poetry]
+name = "unqdantic"
+version = "0.1.0"
+description = "A embedded NoSQL database ODM based on UnQLite."
+authors = ["CMHopeSunshine <277073121@qq.com>"]
+readme = "README.md"
+license = "MIT"
+repository = "https://github.com/CMHopeSunshine/unqdantic.git"
+homepage = "https://github.com/CMHopeSunshine/unqdantic"
+
+[tool.poetry.dependencies]
+python = "^3.8"
+pydantic = "^1.10.10"
+unqlite = "^0.9.6"
+
+[tool.poetry.group.dev.dependencies]
+ruff = "^0.0.277"
+black = "^23.1.0"
+pre-commit = "^3.1.0"
+
+[tool.black]
+line-length = 88
+include = '\.pyi?$'
+extend-exclude = '''
+'''
+skip-string-normalization = true
+target-version = ["py38", "py39", "py310", "py311"]
+
+[tool.ruff]
+select = [
+    "E",
+    "W",   # pycodestyle
+    "F",   # pyflakes
+    "UP",  # pyupgrade
+    "I",   # isort
+    "Q",   # flake8-quotes
+    "PTH", # flake8-use-pathlib
+    "RET", # flake8-return
+    "RSE", # flake8-raise
+    "T20", # flake8-print
+    "PIE", # flake8-pie
+    "SIM", # flake8-simplify
+    "ISC", # flake8-implicit-str-concat
+    "C4",  # flake8-comprehensions
+    "COM", # flake8-commas
+    "A",   # flake8-builtins
+    "B",   # flake8-bugbear
+]
+ignore = ["E402", "B008", "F403", "F405", "B005"]
+line-length = 88
+target-version = "py38"
+ignore-init-module-imports = true
+
+
+[tool.ruff.flake8-builtins]
+builtins-ignorelist = ["id", "type", "all", "filter", "repr", "open", "range"]
+
+[tool.ruff.isort]
+force-sort-within-sections = true
+extra-standard-library = ["typing_extensions"]
+force-wrap-aliases = true
+combine-as-imports = true
+order-by-type = false
+relative-imports-order = "closest-to-furthest"
+section-order = [
+    "future",
+    "standard-library",
+    "first-party",
+    "local-folder",
+    "third-party",
+]
+
+[tool.ruff.pycodestyle]
+ignore-overlong-task-comments = true
+max-doc-length = 120
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
