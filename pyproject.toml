@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "unqdantic"
-version = "0.1.0"
+version = "0.1.1"
 description = "A embedded NoSQL database ODM based on UnQLite."
 authors = ["CMHopeSunshine <277073121@qq.com>"]
 readme = "README.md"
