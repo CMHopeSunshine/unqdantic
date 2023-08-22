@@ -153,7 +153,7 @@ class Database:
 
     def init_model(self, model: Type["Document"]):
         meta = model.__meta__
-        model.__collection__ = self.collection(meta.name or model.__name__)
+        model.__collection__ = self.collection(meta.name or model.__name__.lower())
         model.__collection__.set_schema(model.schema(by_alias=meta.by_alias))
 
     def open(self) -> bool:
