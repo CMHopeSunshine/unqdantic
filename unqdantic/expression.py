@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 import operator
-from typing import Any, Callable, Dict, Optional, Tuple, TYPE_CHECKING, Union
+from typing import Any, Callable, Dict, List, Optional, Tuple, TYPE_CHECKING, Union
 from typing_extensions import Self
 
 from pydantic.fields import ModelField
@@ -17,7 +17,7 @@ class ExpressionField:
     def __init__(
         self,
         field: ModelField,
-        parents: list[tuple[str, "Document"]],
+        parents: List[Tuple[str, "Document"]],
     ) -> None:
         self.field = field
         self.parents = parents

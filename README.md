@@ -59,6 +59,11 @@ class User(Document):
     age: int
     info: UserInfo = Field(default_factory=UserInfo)
 
+    class Meta:
+        name: str = "user"  # 指定文档的集合名，否则默认为类名的小写
+        db: Database  # 可传入要绑定的数据库对象，或者在数据库初始化时传入本模型来绑定
+        by_alias: bool = False  # 是否在数据库集合中使用字段别名，同pydantic
+
 
 # 初始化unqlite数据库
 # filename中，:mem:代表在内存中使用，也可以传入文件路径
@@ -77,14 +82,10 @@ user1.update(
     },
 )
 # 也可以用关键字参数形式更新
-# user1.update(age=20)
-
+user1.update(age=20)
 # 还可以手动修改后，调用save()来更新到数据库
 user1.info.level = 2
 user1.save()
-
-# 删除该文档
-user1.delete()
 
 # 如果没有name为a且age为15的文档，则创建，否则更新info.level为2
 user2 = User.update_or_create(
@@ -94,8 +95,11 @@ user2 = User.update_or_create(
         User.info.level: 2,
     },
 )
-# 这两个模型的id一致
+# 这两个模型为同一个文档，id一致
 assert user1.id == user2.id
+
+# 删除该文档
+user2.delete()
 
 # 可以先创建模型对象，然后使用save_all批量插入到数据库
 user3 = User(name="b", age=18, info=UserInfo(money=150))
@@ -166,6 +170,7 @@ value: Optional[bytes] = db["key"]  # b"value"
 del db["key"]
 # 查看键值对是否存在
 assert "key" not in db
+
 ```
 
 ## 后续计划

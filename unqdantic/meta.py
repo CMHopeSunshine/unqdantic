@@ -10,7 +10,7 @@ class MetaConfig:
 
 
 def mix_meta_config(
-    self_config: Type[MetaConfig] | None,
+    self_config: Optional[Type[MetaConfig]],
     parent_config: Type[MetaConfig],
     **namespace: Any,
 ) -> Type[MetaConfig]:

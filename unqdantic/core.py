@@ -66,10 +66,10 @@ class Collection:
             return datetime.strptime(date, "%Y-%m-%d %H:%M:%S")
         return None
 
-    def set_schema(self, schema: dict[str, Any], **kwargs) -> bool:
+    def set_schema(self, schema: Dict[str, Any], **kwargs) -> bool:
         return self.collection.set_schema(schema, **kwargs)
 
-    def get_schema(self) -> dict[str, Any]:
+    def get_schema(self) -> Dict[str, Any]:
         return self.collection.get_schema()
 
     def last_record_id(self) -> int:
@@ -147,14 +147,18 @@ class Database:
                     self._documents.add(document)
                     self.init_model(document)
 
+    def __repr__(self) -> str:
+        return f"Database(filename={self.filename})"
+
     @property
     def opened(self) -> bool:
         return self.db.is_open
 
     def init_model(self, model: Type["Document"]):
-        meta = model.__meta__
-        model.__collection__ = self.collection(meta.name or model.__name__.lower())
-        model.__collection__.set_schema(model.schema(by_alias=meta.by_alias))
+        model.collection = self.collection(model.meta.name or model.__name__.lower())
+        model.meta.db = self
+        model.meta.name = model.meta.name or model.__name__.lower()
+        model.collection.set_schema(model.schema(by_alias=model.meta.by_alias))
 
     def open(self) -> bool:
         if self.opened:

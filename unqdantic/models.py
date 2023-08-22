@@ -59,7 +59,7 @@ class MetaDocument(ModelMetaclass):
 
         for base in reversed(bases):
             if base != BaseModel and issubclass(base, Document):
-                meta = mix_meta_config(base.__meta__, MetaConfig)
+                meta = mix_meta_config(base.meta, MetaConfig)
 
         allowed_meta_kwargs = {
             key
@@ -70,9 +70,9 @@ class MetaDocument(ModelMetaclass):
             key: kwargs.pop(key) for key in kwargs.keys() & allowed_meta_kwargs
         }
 
-        attrs["__meta__"] = mix_meta_config(attrs.get("Meta"), meta, **meta_kwargs)
+        attrs["meta"] = mix_meta_config(attrs.get("Meta"), meta, **meta_kwargs)
 
-        new_cls = super().__new__(cls, cname, bases, attrs, **kwargs)
+        new_cls: Type[Document] = super().__new__(cls, cname, bases, attrs, **kwargs)
 
         for name, field in new_cls.__fields__.items():
             setattr(new_cls, name, ExpressionField(field, []))
@@ -85,9 +85,9 @@ class MetaDocument(ModelMetaclass):
         )
         add_fields(new_cls, id=(int, id_value))
 
-        new_cls.__collection__ = None
-        if new_cls.__meta__.db is not None:
-            new_cls.__meta__.db.init_model(new_cls)
+        new_cls.collection = None
+        if new_cls.meta.db is not None:
+            new_cls.meta.db.init_model(new_cls)
 
         return new_cls
 
@@ -109,14 +109,14 @@ class MetaEmbeddedDocument(ModelMetaclass):
 
 class Document(BaseModel, metaclass=MetaDocument):
     if TYPE_CHECKING:
-        __meta__: ClassVar[Type[MetaConfig]]
-        __collection__: ClassVar[Collection]
+        meta: ClassVar[Type[MetaConfig]]
+        collection: ClassVar[Optional[Collection]]
 
         def __init_subclass__(
             cls,
             *,
-            name: str | None = None,
-            db: Database | str | None = None,
+            name: Optional[str] = None,
+            db: Union[Database, str, None] = None,
             **kwargs: Any,
         ) -> None:
             ...
@@ -124,9 +124,9 @@ class Document(BaseModel, metaclass=MetaDocument):
     Meta = MetaConfig
 
     def insert(self) -> Self:
-        if self.__collection__ is None:
+        if self.collection is None:
             raise ValueError(f"文档 {self.__class__.__name__} 未绑定数据库")
-        id = self.__collection__.store(self.doc(), return_id=True)
+        id = self.collection.store(self.doc(), return_id=True)
         self.id = id
         return self
 
@@ -136,7 +136,7 @@ class Document(BaseModel, metaclass=MetaDocument):
         fields: Optional[Dict[Any, Any]] = None,
         **kwargs: Any,
     ) -> bool:
-        if self.__collection__ is None:
+        if self.collection is None:
             raise ValueError(f"文档 {self.__class__.__name__} 未绑定数据库")
         if fields:
             str_fields = {str(k): v for k, v in fields.items()}
@@ -150,12 +150,12 @@ class Document(BaseModel, metaclass=MetaDocument):
         if kwargs:
             for k, v in kwargs.items():
                 setattr(self, k, v)
-        return self.__collection__.update(self.id, self.doc())
+        return self.collection.update(self.id, self.doc())
 
     def save(self, **kwargs: Any) -> Self:
-        if self.__collection__ is None:
+        if self.collection is None:
             raise ValueError(f"文档 {self.__class__.__name__} 未绑定数据库")
-        existing_doc = self.__collection__.fetch(self.id)
+        existing_doc = self.collection.fetch(self.id)
         if existing_doc:
             self.update(**kwargs)
         else:
@@ -163,16 +163,16 @@ class Document(BaseModel, metaclass=MetaDocument):
         return self
 
     def delete(self) -> bool:
-        if self.__collection__ is None:
+        if self.collection is None:
             raise ValueError(f"文档 {self.__class__.__name__} 未绑定数据库")
-        return self.__collection__.delete(self.id)
+        return self.collection.delete(self.id)
 
     @classmethod
     def save_all(cls, *documents: Self) -> bool:
-        if cls.__collection__ is None:
+        if cls.collection is None:
             raise ValueError(f"文档 {cls.__name__} 未绑定数据库")
         if documents:
-            return cls.__collection__.store(
+            return cls.collection.store(
                 [doc.doc() for doc in documents],
                 return_id=False,
             )
@@ -180,12 +180,12 @@ class Document(BaseModel, metaclass=MetaDocument):
 
     @classmethod
     def find_all(cls, *filter: Union[Expression, bool]) -> List[Self]:
-        if cls.__collection__ is None:
+        if cls.collection is None:
             raise ValueError(f"文档 {cls.__name__} 未绑定数据库")
         if not filter:
             return cls.all()
         expression = Expression.merge(filter)
-        data = cls.__collection__.filter(expression.to_filter_func)
+        data = cls.collection.filter(expression.to_filter_func)
         return [cls.from_doc(doc) for doc in data]
 
     @classmethod
@@ -197,31 +197,31 @@ class Document(BaseModel, metaclass=MetaDocument):
 
     @classmethod
     def get_by_id(cls, id: int) -> Optional[Self]:
-        if cls.__collection__ is None:
+        if cls.collection is None:
             raise ValueError(f"文档 {cls.__name__} 未绑定数据库")
-        if doc := cls.__collection__.fetch(id):
+        if doc := cls.collection.fetch(id):
             return cls.from_doc(doc)
         return None
 
     @classmethod
     def delete_by_id(cls, id: int) -> bool:
-        if cls.__collection__ is None:
+        if cls.collection is None:
             raise ValueError(f"文档 {cls.__name__} 未绑定数据库")
-        return cls.__collection__.delete(id)
+        return cls.collection.delete(id)
 
     @classmethod
     def all(cls) -> List[Self]:
-        if cls.__collection__ is None:
+        if cls.collection is None:
             raise ValueError(f"文档 {cls.__name__} 未绑定数据库")
-        return [cls.from_doc(doc) for doc in cls.__collection__.all()]
+        return [cls.from_doc(doc) for doc in cls.collection.all()]
 
     @classmethod
     def clear(cls, recreate: bool = True) -> None:
-        if cls.__collection__ is None:
+        if cls.collection is None:
             raise ValueError(f"文档 {cls.__name__} 未绑定数据库")
-        cls.__collection__.drop()
+        cls.collection.drop()
         if recreate:
-            cls.__collection__.create()
+            cls.collection.create()
 
     @classmethod
     def get_or_create(
@@ -254,15 +254,15 @@ class Document(BaseModel, metaclass=MetaDocument):
 
     @classmethod
     def export_all_to_dict(cls, **kwargs) -> List[Dict[str, Any]]:
-        kwargs["by_alias"] = cls.__meta__.by_alias
+        kwargs["by_alias"] = cls.meta.by_alias
         return [doc.dict(**kwargs) for doc in cls.all()]
 
     @classmethod
     def bulk_save_from_dict(cls, docs: List[Dict[str, Any]]) -> List[Self]:
-        return [cls.from_doc(doc).save() for doc in docs]
+        return [cls(**doc).save() for doc in docs]
 
     def doc(self, **kwargs) -> Dict[str, Any]:
-        kwargs["by_alias"] = self.__meta__.by_alias
+        kwargs["by_alias"] = self.meta.by_alias
         data = self.json(**kwargs)
         return json.loads(data)
 
@@ -273,9 +273,9 @@ class Document(BaseModel, metaclass=MetaDocument):
 
     @classmethod
     def get_last_id(cls) -> int:
-        if cls.__collection__ is None:
+        if cls.collection is None:
             raise ValueError(f"文档 {cls.__name__} 未绑定数据库")
-        return cls.__collection__.last_record_id()
+        return cls.collection.last_record_id()
 
     @classmethod
     def _generate_id(cls) -> int:
