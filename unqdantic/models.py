@@ -1,5 +1,15 @@
 import json
-from typing import Any, ClassVar, Dict, List, Optional, Type, TYPE_CHECKING, Union
+from typing import (
+    Any,
+    ClassVar,
+    Dict,
+    List,
+    Optional,
+    Tuple,
+    Type,
+    TYPE_CHECKING,
+    Union,
+)
 from typing_extensions import dataclass_transform, Self
 
 from .core import Collection, Database
@@ -51,8 +61,8 @@ class MetaDocument(ModelMetaclass):
     def __new__(
         cls,
         cname: str,
-        bases: tuple[type[Any], ...],
-        attrs: dict[str, Any],
+        bases: Tuple[Type[Any], ...],
+        attrs: Dict[str, Any],
         **kwargs: Any,
     ):
         meta = MetaConfig
@@ -97,8 +107,8 @@ class MetaEmbeddedDocument(ModelMetaclass):
     def __new__(
         cls,
         name: str,
-        bases: tuple[type[Any], ...],
-        attrs: dict[str, Any],
+        bases: Tuple[Type[Any], ...],
+        attrs: Dict[str, Any],
         **kwargs: Any,
     ):
         new_cls = super().__new__(cls, name, bases, attrs, **kwargs)
