@@ -26,7 +26,7 @@ UnqDantic 是一个基于 [UnQLite](https://github.com/symisc/unqlite) 和 [Pyda
 
 **不要再用 json 文件当数据库用啦，来试试 UnqDantic 吧！！**
 
-> 但是 UNQlite 不支持索引、唯一约束等特性，尚未知性能如何，可能不适用于大型项目
+> 但是 UnQLite 不支持索引、唯一约束等特性，尚未知性能如何，可能不适用于大型项目
 
 ## 安装
 
@@ -157,7 +157,7 @@ collection.delete(id=id)
 
 # 可以过滤查询文档
 # 需要传入一个参数为文档，返回值为bool的函数
-datas: List[Dict[str, Any]] = collection.filter(lambda doc: doc["name"] == "a")
+datas: Optional[List[Dict[str, Any]]] = collection.filter(lambda doc: doc["name"] == "a")
 
 # 除此之外，你还可以直接将数据库db当键值对数据库使用，就像python的dict一样
 # 但是同样的，值只支持基本数据类型，并且返回值是该值的bytes形式

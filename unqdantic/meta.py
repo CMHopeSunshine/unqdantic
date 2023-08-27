@@ -4,7 +4,7 @@ from .core import Database
 
 
 class MetaConfig:
-    name: Optional[str] = None
+    name: str
     db: Optional[Database] = None
     by_alias: bool = False
 

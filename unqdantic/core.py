@@ -48,7 +48,7 @@ class Collection:
     def __len__(self) -> int:
         return self.collection.__len__()
 
-    def filter(self, filter_fn: Any) -> List[Dict[str, Any]]:
+    def filter(self, filter_fn: Any) -> Optional[List[Dict[str, Any]]]:
         return self.collection.filter(filter_fn)
 
     def create(self) -> bool:
@@ -127,7 +127,7 @@ class Collection:
 
 
 class Database:
-    _documents: Set[Type["Document"]] = set()
+    _documents: Set[str] = set()
 
     def __init__(
         self,
@@ -136,16 +136,16 @@ class Database:
         flags: UnqliteOpenFlag = UnqliteOpenFlag.CREATE,
         open_database: bool = True,
     ) -> None:
-        self.db: unqlite.UnQLite = unqlite.UnQLite(filename, flags, open_database)
         self.filename: str = (
             str(filename.absolute()) if isinstance(filename, Path) else filename
         )
+        self.db: unqlite.UnQLite = unqlite.UnQLite(self.filename, flags, open_database)
         self.collections: Dict[str, Collection] = {}
         if documents:
             for document in documents:
-                if document not in self._documents:
-                    self._documents.add(document)
+                if document.meta.name not in self._documents:
                     self.init_model(document)
+                    self._documents.add(document.meta.name)
 
     def __repr__(self) -> str:
         return f"Database(filename={self.filename})"
@@ -157,7 +157,6 @@ class Database:
     def init_model(self, model: Type["Document"]):
         model.collection = self.collection(model.meta.name or model.__name__.lower())
         model.meta.db = self
-        model.meta.name = model.meta.name or model.__name__.lower()
         model.collection.set_schema(model.schema(by_alias=model.meta.by_alias))
 
     def open(self) -> bool:

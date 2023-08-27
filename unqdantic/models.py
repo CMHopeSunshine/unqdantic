@@ -94,6 +94,9 @@ class MetaDocument(ModelMetaclass):
             unqlite_pk=True,
         )
         add_fields(new_cls, id=(int, id_value))
+        new_cls.meta.name = (
+            getattr(new_cls.meta, "name", None) or new_cls.__name__.lower()
+        )
 
         new_cls.collection = None
         if new_cls.meta.db is not None:
@@ -195,7 +198,7 @@ class Document(BaseModel, metaclass=MetaDocument):
         if not filter:
             return cls.all()
         expression = Expression.merge(filter)
-        data = cls.collection.filter(expression.to_filter_func)
+        data = cls.collection.filter(expression.to_filter_func) or []
         return [cls.from_doc(doc) for doc in data]
 
     @classmethod
