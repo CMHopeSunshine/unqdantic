@@ -14,17 +14,9 @@ pydantic = "^1.10.10"
 unqlite = "^0.9.6"
 
 [tool.poetry.group.dev.dependencies]
-ruff = "^0.0.277"
-black = "^23.1.0"
+ruff = "^0.1.4"
 pre-commit = "^3.1.0"
 
-[tool.black]
-line-length = 88
-include = '\.pyi?$'
-extend-exclude = '''
-'''
-skip-string-normalization = true
-target-version = ["py38", "py39", "py310", "py311"]
 
 [tool.ruff]
 select = [
@@ -74,6 +66,12 @@ section-order = [
 ignore-overlong-task-comments = true
 max-doc-length = 120
 
+[tool.pyright]
+pythonVersion = "3.10"
+pythonPlatform = "All"
+typeCheckingMode = "basic"
+reportShadowedImports = false
+disableBytesTypePromotions = true
 
 [build-system]
 requires = ["poetry-core"]
