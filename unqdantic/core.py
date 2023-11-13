@@ -155,7 +155,7 @@ class Database:
         return self.db.is_open
 
     def init_model(self, model: Type["Document"]):
-        model.collection = self.collection(model.meta.name or model.__name__.lower())
+        model.collection = self.collection(model.meta.name)
         model.meta.db = self
         model.collection.set_schema(model.schema(by_alias=model.meta.by_alias))
 

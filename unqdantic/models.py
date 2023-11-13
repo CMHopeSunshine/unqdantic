@@ -66,11 +66,10 @@ class MetaDocument(ModelMetaclass):
         **kwargs: Any,
     ):
         meta = MetaConfig
-
         for base in reversed(bases):
             if base != BaseModel and issubclass(base, Document):
                 meta = mix_meta_config(base.meta, MetaConfig)
-
+        meta.name = cname
         allowed_meta_kwargs = {
             key
             for key in dir(meta)
@@ -94,9 +93,6 @@ class MetaDocument(ModelMetaclass):
             unqlite_pk=True,
         )
         add_fields(new_cls, id=(int, id_value))
-        new_cls.meta.name = (
-            getattr(new_cls.meta, "name", None) or new_cls.__name__.lower()
-        )
 
         new_cls.collection = None
         if new_cls.meta.db is not None:
