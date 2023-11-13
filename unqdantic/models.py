@@ -13,7 +13,7 @@ from typing import (
 from typing_extensions import dataclass_transform, Self
 
 from .core import Collection, Database
-from .expression import Expression, ExpressionField
+from .expression import Query, QueryPathProxy
 from .meta import MetaConfig, mix_meta_config
 from .utils import generate_dict, merge_dicts, recursively_get_attr
 
@@ -83,9 +83,6 @@ class MetaDocument(ModelMetaclass):
 
         new_cls: Type[Document] = super().__new__(cls, cname, bases, attrs, **kwargs)
 
-        for name, field in new_cls.__fields__.items():
-            setattr(new_cls, name, ExpressionField(field, []))
-
         id_value = Field(
             default_factory=new_cls._generate_id,
             allow_mutation=True,
@@ -100,20 +97,10 @@ class MetaDocument(ModelMetaclass):
 
         return new_cls
 
-
-@dataclass_transform(kw_only_default=True, field_specifiers=(Field, FieldInfo))
-class MetaEmbeddedDocument(ModelMetaclass):
-    def __new__(
-        cls,
-        name: str,
-        bases: Tuple[Type[Any], ...],
-        attrs: Dict[str, Any],
-        **kwargs: Any,
-    ):
-        new_cls = super().__new__(cls, name, bases, attrs, **kwargs)
-        for name, field in new_cls.__fields__.items():
-            setattr(new_cls, name, ExpressionField(field, []))
-        return new_cls
+    def __getattr__(self, name: str):
+        if name in self.__fields__:  # type: ignore
+            return QueryPathProxy(self.__name__, name)
+        return super().__getattr__(name)  # type: ignore
 
 
 class Document(BaseModel, metaclass=MetaDocument):
@@ -188,17 +175,17 @@ class Document(BaseModel, metaclass=MetaDocument):
         return False
 
     @classmethod
-    def find_all(cls, *filter: Union[Expression, bool]) -> List[Self]:
+    def find_all(cls, *filter: Union[Query, bool]) -> List[Self]:
         if cls.collection is None:
             raise ValueError(f"文档 {cls.__name__} 未绑定数据库")
         if not filter:
             return cls.all()
-        expression = Expression.merge(filter)
-        data = cls.collection.filter(expression.to_filter_func) or []
+        expression = Query.merge(filter)
+        data = cls.collection.filter(expression) or []
         return [cls.from_doc(doc) for doc in data]
 
     @classmethod
-    def find_one(cls, *filter: Union[Expression, bool]) -> Optional[Self]:
+    def find_one(cls, *filter: Union[Query, bool]) -> Optional[Self]:
         if not filter:
             return cls.get_by_id(0)
         docs = cls.find_all(*filter)
@@ -235,10 +222,10 @@ class Document(BaseModel, metaclass=MetaDocument):
     @classmethod
     def get_or_create(
         cls,
-        *filter: Union[Expression, bool],
+        *filter: Union[Query, bool],
         defaults: Union[Any, Self, None] = None,
     ) -> Self:
-        expression = Expression.merge(filter)
+        expression = Query.merge(filter)
         if model := cls.find_one(expression):
             return model
         default = defaults.doc() if isinstance(defaults, Document) else defaults or {}
@@ -249,10 +236,10 @@ class Document(BaseModel, metaclass=MetaDocument):
     @classmethod
     def update_or_create(
         cls,
-        *filter: Union[Expression, bool],
+        *filter: Union[Query, bool],
         defaults: Union[Any, Self, None] = None,
     ) -> Self:
-        expression = Expression.merge(filter)
+        expression = Query.merge(filter)
         default = defaults.doc() if isinstance(defaults, Document) else defaults or {}
         default = generate_dict({str(k): v for k, v in default.items()})
         if model := cls.find_one(expression):
@@ -293,10 +280,5 @@ class Document(BaseModel, metaclass=MetaDocument):
         except ValueError:
             return 0
 
-    class Config:
-        validate_assignment = True
-
-
-class EmbeddedDocument(BaseModel, metaclass=MetaEmbeddedDocument):
     class Config:
         validate_assignment = True

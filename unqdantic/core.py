@@ -2,6 +2,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import (
     Any,
+    Callable,
     Dict,
     Generator,
     Iterable,
@@ -48,7 +49,10 @@ class Collection:
     def __len__(self) -> int:
         return self.collection.__len__()
 
-    def filter(self, filter_fn: Any) -> Optional[List[Dict[str, Any]]]:
+    def filter(
+        self,
+        filter_fn: Callable[[Dict[str, Any]], bool],
+    ) -> Optional[List[Dict[str, Any]]]:
         return self.collection.filter(filter_fn)
 
     def create(self) -> bool:

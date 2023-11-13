@@ -4,8 +4,5 @@ from .core import (
 )
 from .expression import *
 from .meta import MetaConfig as MetaConfig
-from .models import (
-    Document as Document,
-    EmbeddedDocument as EmbeddedDocument,
-)
+from .models import Document as Document
 from .types import UnqliteOpenFlag as UnqliteOpenFlag
