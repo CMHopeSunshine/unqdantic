@@ -13,6 +13,8 @@ on:
       - "unqdantic/**"
       - "tests/**"
 
+  workflow_dispatch:
+
 jobs:
   tests:
     name: Run Pytest

@@ -41,14 +41,14 @@ UnqDantic 是一个基于 [UnQLite](https://github.com/symisc/unqlite) 和 [Pyda
 ```python
 from typing import Any, Dict, List, Optional
 
-from unqdantic import Database, Document, EmbeddedDocument
+from unqdantic import Database, Document
 
-from pydantic import Field
+from pydantic import Field, BaseModel
 
 
 # 像pydantic一样定义模型，可以使用pydantic的所有特性
 # 定义内嵌模型
-class UserInfo(EmbeddedDocument):
+class UserInfo(BaseModel):
     money: int = 100
     level: int = 1
 
@@ -62,6 +62,7 @@ class User(Document):
     class Meta:
         name: str = "user"  # 指定文档的集合名，否则默认为类名的小写
         db: Database  # 可传入要绑定的数据库对象，或者在数据库初始化时传入本模型来绑定
+        # db = Database(filename=":mem:", documents=[User])
         by_alias: bool = False  # 是否在数据库集合中使用字段别名，同pydantic
 
 
