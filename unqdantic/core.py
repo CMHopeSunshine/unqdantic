@@ -140,7 +140,11 @@ class Database:
         flags: UnqliteOpenFlag = UnqliteOpenFlag.CREATE,
         open_database: bool = True,
     ) -> None:
-        self.filename: str = (
+        if isinstance(filename, str) and filename != ":mem:":
+            filename = Path(filename)
+            if not filename.exists():
+                raise FileNotFoundError(f"Database file {filename} not found")
+        self.filename = (
             str(filename.absolute()) if isinstance(filename, Path) else filename
         )
         self.db: unqlite.UnQLite = unqlite.UnQLite(self.filename, flags, open_database)

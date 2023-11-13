@@ -1,0 +1,41 @@
+name: Tests
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - "unqdantic/**"
+      - "tests/**"
+
+  pull_request:
+    paths:
+      - "unqdantic/**"
+      - "tests/**"
+
+jobs:
+  tests:
+    name: Run Pytest
+    runs-on: ${{ matrix.os }}
+    concurrency:
+      group: test-${{ github.ref }}-${{ matrix.os }}-${{ matrix.python-version }}
+      cancel-in-progress: true
+    strategy:
+      matrix:
+        python-version: ["3.8", "3.9", "3.10", "3.11"]
+        os: [ubuntu-latest, windows-latest, macos-latest]
+      fail-fast: false
+    env:
+      OS: ${{ matrix.os }}
+      PYTHON_VERSION: ${{ matrix.python-version }}
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Python environment
+        uses: ./.github/actions/setup-python
+
+      - name: Install Optional Dependencies
+        run: poetry install --extras "all"
+
+      - name: Run Pytest
+        run: poetry run pytest
